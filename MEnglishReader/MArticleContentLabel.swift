@@ -9,7 +9,6 @@
 import UIKit
 
 class MArticleContentLabel: UILabel {
-    var textAttributeStyle: MTextAttributeStyle = .none
     
     var turnOnWordFilter = false {
         didSet {
@@ -69,7 +68,8 @@ class MArticleContentLabel: UILabel {
             let touchPoint = highlightWordsLoaction.first
             let touchWordIndex = indexOf(point: touchPoint!)
             let rangeIndex = getRangeOfWordAt(index: touchWordIndex,wordsString: self.text!)
-            mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:NSMakeRange(rangeIndex[0] + 1, rangeIndex[1] - rangeIndex[0] - 1))
+            let range = rangeIndex[0] == 0 ? NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0]) : NSMakeRange(rangeIndex[0] + 1, rangeIndex[1] - rangeIndex[0] - 1)
+            mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:range)
             
             highlightWordsLoaction.removeLast()
             allowSelectWord = true
@@ -112,11 +112,17 @@ extension MArticleContentLabel {
             return [0,0]
         }
         
-        while characters[startIndex] != " " && characters[startIndex] != "," && characters[startIndex] != "." {
+        while characters[startIndex] != " " && characters[startIndex] != "," && characters[startIndex] != "." && startIndex > 0{
             startIndex -= 1
+            if startIndex < 1 {
+                break
+            }
         }
-        while characters[endIndex] != " " && characters[endIndex] != "," && characters[endIndex] != "." {
+        while characters[endIndex] != " " && characters[endIndex] != "," && characters[endIndex] != "." && endIndex < characters.count - 1{
             endIndex += 1
+            if startIndex > characters.count - 1 {
+                break
+            }
         }
         
         let startIn = wordsString.index(wordsString.startIndex, offsetBy: startIndex + 1)

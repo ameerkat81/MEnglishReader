@@ -9,12 +9,6 @@
 import UIKit
 
 
-// MARK: - 字符串匹配
-enum MTextAttributeStyle {
-    case underline
-    case none
-}
-
 // textView内容String的拓展
 extension String {
     func matchedStrsNSRange(toMatchStr: String) -> [NSRange] {

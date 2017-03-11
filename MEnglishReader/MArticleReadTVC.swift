@@ -85,7 +85,7 @@ extension MArticleReadTVC {
             if words.count > 0 {
                 HUD.flash(HUDContentType.label("\(word)属于Level \(words[0].level!.rawValue)"), delay: 2.0)
             }else {
-                HUD.flash(HUDContentType.label(REMIND_OF_NO_SUCH_WORD_IN_DB), delay: 1.0)
+                HUD.flash(HUDContentType.label(REMIND_OF_NO_SUCH_WORD_IN_DB), delay: 0.8)
             }
         }
     }
