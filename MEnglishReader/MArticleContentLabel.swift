@@ -69,10 +69,12 @@ class MArticleContentLabel: UILabel {
             let touchWordIndex = indexOf(point: touchPoint!)
             let rangeIndex = getRangeOfWordAt(index: touchWordIndex,wordsString: self.text!)
             let range = rangeIndex[0] == 0 ? NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0]) : NSMakeRange(rangeIndex[0] + 1, rangeIndex[1] - rangeIndex[0] - 1)
-            mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:range)
-            
-            highlightWordsLoaction.removeLast()
-            allowSelectWord = true
+            if range.length > 0 {
+                mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:range)
+                
+                highlightWordsLoaction.removeLast()
+                allowSelectWord = true
+            }
         }
         
         let framesetter = CTFramesetterCreateWithAttributedString(mutableAttributeString)

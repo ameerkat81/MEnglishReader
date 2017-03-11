@@ -177,7 +177,7 @@ extension MArticleReadTVC {
             return  size.height + 1
         }
         
-        return 70
+        return 80
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

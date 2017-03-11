@@ -21,7 +21,7 @@ class MArticleTitleCell: UITableViewCell {
     lazy var englishTitleLabel: UILabel = {
         let titleLabel = UILabel()
         titleLabel.font = UIFont.systemFont(ofSize: ENGLISH_TITLE_FONT_SIZE)
-        titleLabel.numberOfLines = 0
+        titleLabel.numberOfLines = 2
         titleLabel.textColor = UIColor.black
         return titleLabel
     }()
