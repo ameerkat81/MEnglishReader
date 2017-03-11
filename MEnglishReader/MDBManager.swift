@@ -39,13 +39,14 @@ class MDBManager {
             } catch _ {
                 print(DATA_BASE_DATA_COPY_FAULTS_TIPS)
             }
-        }else {
-            do {
-                databaseConnection = try Connection("\(dbPath)/MEnglishReader.db")
-            } catch _ {
-                print(DATA_BASE_CONNECTION_FAULTS_TIPS)
-            }
         }
+ 
+        do {
+                databaseConnection = try Connection("\(dbPath)/MEnglishReader.db")
+        } catch _ {
+                print(DATA_BASE_CONNECTION_FAULTS_TIPS)
+        }
+        
         completed(databaseConnection)
     }
     
