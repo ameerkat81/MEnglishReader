@@ -136,7 +136,7 @@ extension MArticleReadTVC {
         
         if hidden {
             UIView.animate(withDuration: animateDuration, animations: { ()->() in
-                view.frame = CGRect(x: 0, y: SCREEN_HEIGHT, width: SCREEN_WDITH, height: viewH)
+                view.frame = CGRect(x: 0, y: SCREEN_HEIGHT + self.tableView.contentOffset.y, width: SCREEN_WDITH, height: viewH)
             }, completion: { (isOK) in
                 view.isHidden = hidden
                 
@@ -144,15 +144,24 @@ extension MArticleReadTVC {
             })
         }else{
             view.isHidden = hidden
-            let addtionViewH = NSStringFromClass(view.classForCoder) == "MEnglishReader.MSliderView" ? SLIDER_HIEGHT - 10 : 0
-            
+            let addtionViewH = NSStringFromClass(view.classForCoder) == "MEnglishReader.MSliderView" ? SLIDER_HIEGHT + 5 : 15
+        
             UIView.animate(withDuration: animateDuration, animations: { ()->() in
-                view.frame = CGRect(x: 0, y: SCREEN_HEIGHT - viewH - NAVI_HEIGHT - self.titleCell.frame.height - addtionViewH, width: SCREEN_WDITH, height: viewH)
+                view.frame = CGRect(x: 0, y: SCREEN_HEIGHT - viewH - NAVI_HEIGHT - addtionViewH + self.tableView.contentOffset.y, width: SCREEN_WDITH, height: viewH)
                 print(view.frame)
             }, completion: { (isOK) in
                 if completion != nil {completion!()}
             })
         }
+    }
+    
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let yOffset = scrollView.contentOffset.y
+        
+        bottomSlider.frame = CGRect(x: 0, y: SCREEN_HEIGHT - SLIDER_HIEGHT - NAVI_HEIGHT + yOffset - SLIDER_HIEGHT, width: SCREEN_WDITH, height: SLIDER_HIEGHT)
+        bottomSwitch.frame = CGRect(x: 0, y: SCREEN_HEIGHT - SLIDER_HIEGHT - NAVI_HEIGHT + yOffset - 10, width: SCREEN_WDITH, height: SLIDER_HIEGHT)
+        
+        bottomSwitch.setNeedsDisplay()
     }
 }
 

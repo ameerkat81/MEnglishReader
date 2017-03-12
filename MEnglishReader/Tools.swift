@@ -18,10 +18,22 @@ extension String {
         var allRange = [NSRange]()
         while selfStr.range(of: toMatchStr).location != NSNotFound {
             let range = selfStr.range(of: toMatchStr)
-            allRange.append(NSRange(location: range.location,length: range.length))
-            selfStr = selfStr.replacingCharacters(in: NSMakeRange(range.location, range.length), with: withStr) as NSString
+            allRange.append(range)
+            selfStr = selfStr.replacingCharacters(in: range, with: withStr) as NSString
         }
         return allRange
+    }
+}
+
+extension String.CharacterView._Element {
+    func isEnglishLetter() -> Bool{
+        let str = String(self)
+        for char in str.utf8 {
+            if (char > 64 && char < 91) || (char > 96 && char < 123) {
+                return true
+            }
+        }
+        return false
     }
 }
 

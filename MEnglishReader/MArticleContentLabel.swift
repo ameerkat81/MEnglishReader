@@ -56,7 +56,7 @@ class MArticleContentLabel: UILabel {
                     let endIndex = $0.location + $0.length
                     let characters = Array(self.text!.characters)
                     
-                    if characters[startIndex-1] == " " && characters[endIndex+1] == " " {
+                    if !characters[startIndex-1].isEnglishLetter() && !characters[endIndex].isEnglishLetter() {
                     mutableAttributeString.addAttributes([NSFontAttributeName:ARLTICLE_CONTENT_FONT,NSUnderlineStyleAttributeName: 1], range: $0)
                     }
                 }
@@ -69,6 +69,7 @@ class MArticleContentLabel: UILabel {
             let touchWordIndex = indexOf(point: touchPoint!)
             let rangeIndex = getRangeOfWordAt(index: touchWordIndex,wordsString: self.text!)
             let range = rangeIndex[0] == 0 ? NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0]) : NSMakeRange(rangeIndex[0] + 1, rangeIndex[1] - rangeIndex[0] - 1)
+
             if range.length > 0 {
                 mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:range)
             }
@@ -113,13 +114,13 @@ extension MArticleContentLabel {
             return [0,0]
         }
         
-        while characters[startIndex] != " " && characters[startIndex] != "," && characters[startIndex] != "." && startIndex > 0{
+        while characters[startIndex].isEnglishLetter() && startIndex > 0{
             startIndex -= 1
             if startIndex < 1 {
                 break
             }
         }
-        while characters[endIndex] != " " && characters[endIndex] != "," && characters[endIndex] != "." && endIndex < characters.count - 1{
+        while characters[endIndex].isEnglishLetter() && endIndex < characters.count - 1{
             endIndex += 1
             if startIndex > characters.count - 1 {
                 break
@@ -154,7 +155,8 @@ extension MArticleContentLabel {
 extension MArticleContentLabel {
     var arributeWords: [MNCE4Words] {
         get {
-            return NCE4WordsMannager.sharedNCE4WordsMannager.getNCE4WordsFrom(wordsString: self.text!, level: self.attributeWordLevel)
+            let tnp = NCE4WordsMannager.sharedNCE4WordsMannager.getNCE4WordsFrom(wordsString: self.text!, level: self.attributeWordLevel)
+            return tnp
         }
     }
 }
