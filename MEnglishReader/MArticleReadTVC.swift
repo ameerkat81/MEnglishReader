@@ -177,13 +177,8 @@ extension MArticleReadTVC {
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.row == 1{
-            contentCell.setNeedsLayout()
-            contentCell.layoutIfNeeded()
-            
-            let labelSize = contentCell.contentLabel.sizeThatFits(CGSize(width: SCREEN_WDITH,height: CGFloat(MAXFLOAT)))
-            let attributes = [NSFontAttributeName: contentCell.contentLabel.font]
-            let size = contentCell.contentLabel.text!.boundingRect(with: labelSize, options: NSStringDrawingOptions.usesLineFragmentOrigin, attributes:attributes, context: nil)
-            return  size.height + 1
+            let labelSize = contentCell.contentLabel.sizeThatFits(CGSize(width: 200,height: CGFloat(MAXFLOAT)))
+            return labelSize.height + 1
         }
         
         return 80
