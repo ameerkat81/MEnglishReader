@@ -33,55 +33,80 @@ class MArticleContentLabel: UILabel {
     var allowSelectWord = true
     
     override func draw(_ rect: CGRect) {
-        let context = UIGraphicsGetCurrentContext()
-        context?.convertCoordinateSystem(view: self)
-        
-        let mutablePath = UIBezierPath(rect: rect)
-        let mutableAttributeString =  NSMutableAttributedString(string: self.text!)
-        
-        // 文本排版格式
-        let style = NSMutableParagraphStyle()
-        style.lineSpacing = LINE_SPACING
-        style.alignment = .justified
-        mutableAttributeString.addAttribute(NSParagraphStyleAttributeName, value: style, range: NSMakeRange(0, mutableAttributeString.length))
-        mutableAttributeString.addAttribute(NSFontAttributeName, value: ARLTICLE_CONTENT_FONT, range: NSMakeRange(0, mutableAttributeString.length))
-        
-        // 过滤加下划线
-        if(turnOnWordFilter) {
-            for word in arributeWords {
-                let allMatchedWordsRange = mutableAttributeString.string.matchedStrsNSRange(toMatchStr: word.word!)
-                allMatchedWordsRange.forEach {
-                    // 检查是否是单个单词
-                    let startIndex = $0.location
-                    let endIndex = $0.location + $0.length
-                    let characters = Array(self.text!.characters)
-                    
-                    if !characters[startIndex-1].isEnglishLetter() && !characters[endIndex].isEnglishLetter() {
-                    mutableAttributeString.addAttributes([NSFontAttributeName:ARLTICLE_CONTENT_FONT,NSUnderlineStyleAttributeName: 1], range: $0)
+        if let context = UIGraphicsGetCurrentContext() {
+            context.convertCoordinateSystem(view: self)
+            
+            let mutablePath = UIBezierPath(rect: rect)
+            let mutableAttributeString =  NSMutableAttributedString(string: self.text!)
+            
+            // 文本排版格式
+            let style = NSMutableParagraphStyle()
+            style.lineSpacing = LINE_SPACING
+            style.alignment = .justified
+            mutableAttributeString.addAttribute(NSParagraphStyleAttributeName, value: style, range: NSMakeRange(0, mutableAttributeString.length))
+            mutableAttributeString.addAttribute(NSFontAttributeName, value: ARLTICLE_CONTENT_FONT, range: NSMakeRange(0, mutableAttributeString.length))
+            
+            // 过滤加下划线
+            if(turnOnWordFilter) {
+                for word in arributeWords {
+                    let allMatchedWordsRange = mutableAttributeString.string.matchedStrsNSRange(toMatchStr: word.word!)
+                    allMatchedWordsRange.forEach {
+                        // 检查是否是单个单词
+                        let startIndex = $0.location
+                        let endIndex = $0.location + $0.length
+                        let characters = Array(self.text!.characters)
+                        
+                        if !characters[startIndex-1].isEnglishLetter() && !characters[endIndex].isEnglishLetter() {
+                            mutableAttributeString.addAttributes([
+                                NSUnderlineStyleAttributeName: 1], range: $0)
+                        }
                     }
                 }
             }
-        }
-        
-        // 高亮
-        scope: if highlightWordsLoaction.count > 0 && mCTFrame != nil{
-            let touchPoint = highlightWordsLoaction.first
-            let touchWordIndex = indexOf(point: touchPoint!)
             
-            guard let rangeIndex = getRangeOfWordAt(index: touchWordIndex,wordsString: self.text!) else{ highlightWordsLoaction.removeLast(); break scope }
-            
-            let range = NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0] + 1)
-            if range.length > 0 {
-                mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:range)
+            // 高亮
+            scope: if highlightWordsLoaction.count > 0 && mCTFrame != nil{
+                let touchedPoint = highlightWordsLoaction.first!
+                let reversedPoint = CGPoint(x: touchedPoint.x, y: self.bounds.maxY - touchedPoint.y)
+                let touchedLine = getLineTouchedAt(point: reversedPoint, frame: mCTFrame!)
+                let touchedWordIndex = CTLineGetStringIndexForPosition(touchedLine, reversedPoint)
+                
+                guard let rangeIndex = getRangeOfWordAt(index: touchedWordIndex,wordsString: self.text!) else{ highlightWordsLoaction.removeLast(); break scope }
+                
+                let range = NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0] + 1)
+                if range.length > 0 {
+                    // 高亮文字变色
+                    mutableAttributeString.addAttributes([NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR], range:range)
+                    // 绘制圆角高亮阴影
+                    let currentRun = getTouchedRunIn(touchedLine: touchedLine, touchedWordIndex: touchedWordIndex, touchedWordRange: range)
+                    
+                    var ascent: CGFloat = 0
+                    var descent: CGFloat = 0
+                    var leading: CGFloat = 0
+                    CTRunGetTypographicBounds(currentRun, CFRangeMake(0,0), &ascent, &descent, &leading)
+                    
+                    let lineOrigin = getTouchedLineOrigins(point: reversedPoint, frame: mCTFrame!)
+                    let xOffset: CGFloat = CTLineGetOffsetForStringIndex(touchedLine, range.location, nil)
+                    let xNextOffset:CGFloat = CTLineGetOffsetForStringIndex(touchedLine, range.location+range.length+1, nil)
+                    let runBounds = CGRect(x: lineOrigin.x+xOffset, y: lineOrigin.y-descent, width: xNextOffset-xOffset-1, height: ascent+descent)
+                    let path = UIBezierPath(roundedRect: runBounds, cornerRadius: 5)
+                    
+                    context.saveGState()
+                    context.textPosition = CGPoint(x: lineOrigin.x, y: lineOrigin.y)
+                    MAIN_COLOR.setFill()
+                    path.fill()
+                    CTRunDraw(currentRun, context, CFRangeMake(0,0))
+                    context.restoreGState()
+                }
+                highlightWordsLoaction.removeLast()
             }
-            highlightWordsLoaction.removeLast()
+            
+            let framesetter = CTFramesetterCreateWithAttributedString(mutableAttributeString)
+            mCTFrame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, mutableAttributeString.length), mutablePath.cgPath, nil)
+            CTFrameDraw(mCTFrame!, context)
+            
+            allowSelectWord = true
         }
-        
-        let framesetter = CTFramesetterCreateWithAttributedString(mutableAttributeString)
-        mCTFrame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, mutableAttributeString.length), mutablePath.cgPath, nil)
-        CTFrameDraw(mCTFrame!, context!)
-        
-        allowSelectWord = true
     }
     
 }
@@ -89,22 +114,53 @@ class MArticleContentLabel: UILabel {
 
 // MARK: - drawRect Helper
 extension MArticleContentLabel {
-    func indexOf(point: CGPoint) -> CFIndex{
-        let reversedPoint = CGPoint(x: point.x, y: self.bounds.maxY - point.y)
-        
+    func getTouchedRunIn(touchedLine: CTLine, touchedWordIndex: CFIndex, touchedWordRange: NSRange) ->CTRun{
+        let runs = CTLineGetGlyphRuns(touchedLine) as NSArray
+        var currentRun: CTRun!
+        for i in 0..<runs.count {
+            let run = runs[i] as! CTRun
+            let runRange = CTRunGetStringRange(run)
+            if (touchedWordIndex <= runRange.location + runRange.length - 1) && (touchedWordIndex >= touchedWordRange.location) {
+                currentRun = run
+                break
+            }
+        }
+        return currentRun
+    }
+    
+    func getLineTouchedAt(point: CGPoint, frame: CTFrame) -> CTLine{
         let lines = CTFrameGetLines(mCTFrame!) as NSArray
         
         var originsArray = [CGPoint] (repeating: .zero, count: lines.count)
         CTFrameGetLineOrigins(mCTFrame!, CFRangeMake(0, lines.count), &originsArray)
         
+        var line: CTLine!
         for i in 0..<lines.count {
-            if(reversedPoint.y > originsArray[i].y) {
-                let line = lines.object(at: i) as! CTLine
-                return CTLineGetStringIndexForPosition(line, reversedPoint)
+            if(point.y > originsArray[i].y) {
+                line = lines.object(at: i) as! CTLine
+                break
             }
         }
         
-        return 0
+        return line
+    }
+    
+    
+    func getTouchedLineOrigins(point: CGPoint, frame: CTFrame) ->CGPoint{
+        let lines = CTFrameGetLines(mCTFrame!) as NSArray
+        
+        var originsArray = [CGPoint] (repeating: .zero, count: lines.count)
+        CTFrameGetLineOrigins(mCTFrame!, CFRangeMake(0, lines.count), &originsArray)
+        
+        var origin: CGPoint!
+        for i in 0..<lines.count {
+            if(point.y > originsArray[i].y) {
+                origin = originsArray[i]
+                break
+            }
+        }
+        
+        return origin
     }
     
     func getRangeOfWordAt(index: Int, wordsString:String) -> [Int]?{
