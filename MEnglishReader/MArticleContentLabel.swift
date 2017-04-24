@@ -38,13 +38,13 @@ class MArticleContentLabel: UILabel {
         
         let mutablePath = UIBezierPath(rect: rect)
         let mutableAttributeString =  NSMutableAttributedString(string: self.text!)
-        mutableAttributeString.addAttribute(NSFontAttributeName, value: ARLTICLE_CONTENT_FONT, range: NSMakeRange(0, mutableAttributeString.length))
         
         // 文本排版格式
         let style = NSMutableParagraphStyle()
         style.lineSpacing = LINE_SPACING
         style.alignment = .justified
         mutableAttributeString.addAttribute(NSParagraphStyleAttributeName, value: style, range: NSMakeRange(0, mutableAttributeString.length))
+        mutableAttributeString.addAttribute(NSFontAttributeName, value: ARLTICLE_CONTENT_FONT, range: NSMakeRange(0, mutableAttributeString.length))
         
         // 过滤加下划线
         if(turnOnWordFilter) {
@@ -64,22 +64,24 @@ class MArticleContentLabel: UILabel {
         }
         
         // 高亮
-        if highlightWordsLoaction.count > 0 && mCTFrame != nil{
+        scope: if highlightWordsLoaction.count > 0 && mCTFrame != nil{
             let touchPoint = highlightWordsLoaction.first
             let touchWordIndex = indexOf(point: touchPoint!)
-            let rangeIndex = getRangeOfWordAt(index: touchWordIndex,wordsString: self.text!)
-            let range = rangeIndex[0] == 0 ? NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0]) : NSMakeRange(rangeIndex[0] + 1, rangeIndex[1] - rangeIndex[0] - 1)
-
+            
+            guard let rangeIndex = getRangeOfWordAt(index: touchWordIndex,wordsString: self.text!) else{ highlightWordsLoaction.removeLast(); break scope }
+            
+            let range = NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0] + 1)
             if range.length > 0 {
                 mutableAttributeString.addAttributes([NSBackgroundColorAttributeName: MAIN_COLOR, NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR],range:range)
             }
             highlightWordsLoaction.removeLast()
-            allowSelectWord = true
         }
         
         let framesetter = CTFramesetterCreateWithAttributedString(mutableAttributeString)
         mCTFrame = CTFramesetterCreateFrame(framesetter, CFRangeMake(0, mutableAttributeString.length), mutablePath.cgPath, nil)
         CTFrameDraw(mCTFrame!, context!)
+        
+        allowSelectWord = true
     }
     
 }
@@ -105,7 +107,7 @@ extension MArticleContentLabel {
         return 0
     }
     
-    func getRangeOfWordAt(index: Int, wordsString:String) -> [Int]{
+    func getRangeOfWordAt(index: Int, wordsString:String) -> [Int]?{
         let characters = Array(wordsString.characters)
         var startIndex = index
         var endIndex = index
@@ -114,32 +116,34 @@ extension MArticleContentLabel {
             return [0,0]
         }
         
-        while characters[startIndex].isEnglishLetter() && startIndex > 0{
+        while characters[startIndex].isEnglishLetter() && startIndex > -1{
             startIndex -= 1
-            if startIndex < 1 {
+            if startIndex < 0 {
                 break
             }
         }
-        while characters[endIndex].isEnglishLetter() && endIndex < characters.count - 1{
+        while characters[endIndex].isEnglishLetter() && endIndex < characters.count {
             endIndex += 1
             if startIndex > characters.count - 1 {
                 break
             }
         }
         
-        let startIn = wordsString.index(wordsString.startIndex, offsetBy: startIndex + 1)
-        let endIn = wordsString.index(wordsString.startIndex, offsetBy: endIndex - 1)
+        let startIn = wordsString.index(wordsString.startIndex, offsetBy: startIndex+1)
+        let endIn = wordsString.index(wordsString.startIndex, offsetBy: endIndex-1)
         if startIn < endIn {
             let substring = wordsString[startIn...endIn]
             // 弹出单词详情窗口通知
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WordViewShouldShowNotification"), object: self, userInfo: ["Word": substring])
+            
+            return [startIndex+1, endIndex-1]
         }
         
-        return [startIndex,endIndex]
+        return nil
     }
 }
 
-// MARK: - 点击
+// MARK: - 点击事件
 extension MArticleContentLabel {
     override open func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
@@ -152,6 +156,7 @@ extension MArticleContentLabel {
     }
 }
 
+// MARK: - NCE4Words 数据获取
 extension MArticleContentLabel {
     var arributeWords: [MNCE4Words] {
         get {
