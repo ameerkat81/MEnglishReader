@@ -47,28 +47,25 @@ class MArticleReadTVC: UITableViewController, UITextViewDelegate, UIGestureRecog
         return cell
     } ()
     
-    lazy var bottomSlider: MSliderView = {
-        let slider = MSliderView(frame: CGRect(x: 0, y: SCREEN_HEIGHT, width: SCREEN_WDITH, height: SLIDER_HIEGHT))
-        self.contentCell.addSubview(slider)
-        slider.isHidden = true
-        slider.slider.value = Float(self.contentCell.contentLabel.attributeWordLevel.rawValue)
-        return slider
-    } ()
+    lazy var wordFilterModalView: MWordFilterModal = {
+        let rightBarButtonItemFrame = (self.navigationItem.rightBarButtonItem!.value(forKey: "view") as! UIView).frame
+        let trigonPeak = CGPoint(x: rightBarButtonItemFrame.origin.x + rightBarButtonItemFrame.width/2, y: NAVI_HEIGHT)
+        let rectangleFrame = CGRect(x: SCREEN_WDITH - WORDFILTER_VIEW_WIDTH - WORDFILTER_VIEW_TRAILING, y:
+            NAVI_HEIGHT, width: WORDFILTER_VIEW_WIDTH, height: WORDFILTER_VIEW_HEIGHT)
+        let modalFrame = MWordFilterModalFrame(rectangleFrame: rectangleFrame, trigonPeak: trigonPeak, trigonWidth: WORDFILTER_VIEW_TRIGON_WDITH, trigonHeight: WORDFILTER_VIEW_TRIGON_HEIGHT)
+        let modalView = MWordFilterModal(modalFrame: modalFrame)
     
-    lazy var bottomSwitch: MFilterSwitchView = {
-        let mSwitch = MFilterSwitchView(frame: CGRect(x: 0, y: SCREEN_HEIGHT, width: SCREEN_WDITH, height: SLIDER_HIEGHT))
-        self.contentCell.addSubview(mSwitch)
-        mSwitch.isHidden = true
-        mSwitch.levelLabel.text = "单词过滤等级:\(self.contentCell.contentLabel.attributeWordLevel.rawValue)"
-        return mSwitch
-    } ()
+        modalView.delegate = self.contentCell.contentLabel
+        modalView.backgroundColor = MAIN_COLOR
+        modalView.isHidden = true
+        
+        UIApplication.shared.keyWindow?.addSubview(modalView)
+        return modalView
+    }()
     
     private func setupUI() {
         self.navigationItem.title = ""
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "单词过滤", style: .plain, target: self, action: #selector(self.showFilterView))
-        
-        bottomSlider.slider.addTarget(self, action: #selector(self.sliderChanged(_:)), for: UIControlEvents.valueChanged)
-        bottomSwitch.mSwitch.addTarget(self, action: #selector(self.switchChanged(_:)), for: UIControlEvents.valueChanged)
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "单词过滤", style: .plain, target: self, action: #selector(self.changeMWordFilterModal))
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.showWordDetail(notification:)), name: NSNotification.Name(rawValue: "WordViewShouldShowNotification"), object: nil)
     }
@@ -91,77 +88,10 @@ extension MArticleReadTVC {
     }
 }
 
-
-// MARK: - bottomView
+// MARK: - wordFilterView
 extension MArticleReadTVC {
-    func showFilterView() {
-        if bottomSwitch.isHidden == false {
-            setupBottomView(bottomSwitch, viewHeight: 60, hidden: true, animated: true, completion: nil)
-            setupBottomView(bottomSlider, viewHeight: 60, hidden: true, animated: true, completion: nil)
-        }else {
-            setupBottomView(bottomSwitch, viewHeight: 60, hidden: false, animated: true, completion: nil)
-            
-            if bottomSwitch.mSwitch.isOn  {
-                setupBottomView(bottomSlider, viewHeight: 60, hidden: false, animated: true, completion: nil)
-            }
-        }
-    }
-    
-    func switchChanged(_ mSwitch: UISwitch) {
-        contentCell.contentLabel.turnOnWordFilter = mSwitch.isOn
-        
-        if !mSwitch.isOn {
-            setupBottomView(bottomSlider, viewHeight: 60, hidden: true, animated: true, completion: nil)
-        }else {
-            setupBottomView(bottomSlider, viewHeight: 60, hidden: false, animated: true, completion: nil)
-        }
-    }
-    
-    func sliderChanged(_ slider: UISlider) {
-        let value = slider.value
-        let intValue = Int(value + 0.5)
-        slider.value = Float(intValue)
-        
-        bottomSwitch.levelLabel.text = "单词过滤等级：\(intValue)"
-        
-        contentCell.contentLabel.attributeWordLevel = NWCE4WordsLevel(rawValue: Int64(intValue))!
-    }
-    
-    func setupBottomView(_ view:UIView,viewHeight:CGFloat,hidden:Bool,animated:Bool,completion:(() -> Void)?) {
-        if view.isHidden == hidden {
-            return
-        }
-        let animateDuration = animated ? AnimateDuration : 0
-        let viewH:CGFloat = viewHeight
-        
-        if hidden {
-            UIView.animate(withDuration: animateDuration, animations: { ()->() in
-                view.frame = CGRect(x: 0, y: SCREEN_HEIGHT + self.tableView.contentOffset.y, width: SCREEN_WDITH, height: viewH)
-            }, completion: { (isOK) in
-                view.isHidden = hidden
-                
-                if completion != nil {completion!()}
-            })
-        }else{
-            view.isHidden = hidden
-            let addtionViewH = NSStringFromClass(view.classForCoder) == "MEnglishReader.MSliderView" ? SLIDER_HIEGHT + 5 : 15
-        
-            UIView.animate(withDuration: animateDuration, animations: { ()->() in
-                view.frame = CGRect(x: 0, y: SCREEN_HEIGHT - viewH - NAVI_HEIGHT - addtionViewH + self.tableView.contentOffset.y, width: SCREEN_WDITH, height: viewH)
-                print(view.frame)
-            }, completion: { (isOK) in
-                if completion != nil {completion!()}
-            })
-        }
-    }
-    
-    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let yOffset = scrollView.contentOffset.y
-        
-        bottomSlider.frame = CGRect(x: 0, y: SCREEN_HEIGHT - SLIDER_HIEGHT - NAVI_HEIGHT + yOffset - SLIDER_HIEGHT, width: SCREEN_WDITH, height: SLIDER_HIEGHT)
-        bottomSwitch.frame = CGRect(x: 0, y: SCREEN_HEIGHT - SLIDER_HIEGHT - NAVI_HEIGHT + yOffset - 10, width: SCREEN_WDITH, height: SLIDER_HIEGHT)
-        
-        bottomSwitch.setNeedsDisplay()
+    func changeMWordFilterModal() {
+        self.wordFilterModalView.isHidden = !self.wordFilterModalView.isHidden
     }
 }
 
@@ -177,7 +107,7 @@ extension MArticleReadTVC {
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         if indexPath.row == 1{
-            let labelSize = contentCell.contentLabel.sizeThatFits(CGSize(width: 200,height: CGFloat(MAXFLOAT)))
+            let labelSize = contentCell.contentLabel.sizeThatFits(CGSize(width: 200, height: CGFloat(MAXFLOAT)))
             return labelSize.height + 1
         }
         

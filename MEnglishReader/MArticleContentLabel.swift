@@ -8,7 +8,7 @@
 
 import UIKit
 
-class MArticleContentLabel: UILabel {
+class MArticleContentLabel: UILabel, MWordFilterModalDelegate{
     
     var turnOnWordFilter = false {
         didSet {
@@ -16,7 +16,7 @@ class MArticleContentLabel: UILabel {
         }
     }
     
-    var attributeWordLevel: NWCE4WordsLevel = .five {
+    var attributeWordLevel: NWCE4WordsLevel = .zero {
         didSet {
             self.setNeedsDisplay()
         }
@@ -74,31 +74,37 @@ class MArticleContentLabel: UILabel {
                 guard let rangeIndex = getRangeOfWordAt(index: touchedWordIndex,wordsString: self.text!) else{ highlightWordsLoaction.removeLast(); break scope }
                 
                 let range = NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0] + 1)
-                if range.length > 0 {
-                    // 高亮文字变色
-                    mutableAttributeString.addAttributes([NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR], range:range)
-                    // 绘制圆角高亮阴影
-                    let currentRun = getTouchedRunIn(touchedLine: touchedLine, touchedWordIndex: touchedWordIndex, touchedWordRange: range)
-                    
-                    var ascent: CGFloat = 0
-                    var descent: CGFloat = 0
-                    var leading: CGFloat = 0
-                    CTRunGetTypographicBounds(currentRun, CFRangeMake(0,0), &ascent, &descent, &leading)
-                    
-                    let lineOrigin = getTouchedLineOrigins(point: reversedPoint, frame: mCTFrame!)
-                    let xOffset: CGFloat = CTLineGetOffsetForStringIndex(touchedLine, range.location, nil)
-                    let xNextOffset:CGFloat = CTLineGetOffsetForStringIndex(touchedLine, range.location+range.length+1, nil)
-                    let runBounds = CGRect(x: lineOrigin.x+xOffset, y: lineOrigin.y-descent, width: xNextOffset-xOffset-1, height: ascent+descent)
-                    let path = UIBezierPath(roundedRect: runBounds, cornerRadius: 5)
-                    
-                    context.saveGState()
-                    context.textPosition = CGPoint(x: lineOrigin.x, y: lineOrigin.y)
-                    MAIN_COLOR.setFill()
-                    path.fill()
-                    CTRunDraw(currentRun, context, CFRangeMake(0,0))
-                    context.restoreGState()
-                }
+                
+                guard let currentRun = getTouchedRunIn(touchedLine: touchedLine, touchedWordIndex: touchedWordIndex, touchedWordRange: range), range.length > 0 else{ highlightWordsLoaction.removeLast(); break scope }
+                
+                // 高亮文字变色
+                mutableAttributeString.addAttributes([NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR], range:range)
+                
+                var ascent: CGFloat = 0
+                var descent: CGFloat = 0
+                var leading: CGFloat = 0
+                CTRunGetTypographicBounds(currentRun, CFRangeMake(0,0), &ascent, &descent, &leading)
+                
+                let lineOrigin = getTouchedLineOrigins(point: reversedPoint, frame: mCTFrame!)
+                let xOffset: CGFloat = CTLineGetOffsetForStringIndex(touchedLine, range.location, nil)
+                let xNextOffset:CGFloat = CTLineGetOffsetForStringIndex(touchedLine, range.location+range.length+1, nil)
+                let runBounds = CGRect(x: lineOrigin.x+xOffset, y: lineOrigin.y-descent, width: xNextOffset-xOffset-4, height: ascent+descent)
+                let path = UIBezierPath(roundedRect: runBounds, cornerRadius: 5)
+                
+                context.saveGState()
+                context.textPosition = CGPoint(x: lineOrigin.x, y: lineOrigin.y)
+                MAIN_COLOR.setFill()
+                path.fill()
+                CTRunDraw(currentRun, context, CFRangeMake(0,0))
+                context.restoreGState()
+                
                 highlightWordsLoaction.removeLast()
+                
+                // 弹出单词详情窗口通知
+                let startIn = self.text!.index(self.text!.startIndex, offsetBy: rangeIndex[0])
+                let endIn = self.text!.index(self.text!.startIndex, offsetBy: rangeIndex[1])
+                let substring = self.text![startIn...endIn]
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WordViewShouldShowNotification"), object: self, userInfo: ["Word": substring])
             }
             
             let framesetter = CTFramesetterCreateWithAttributedString(mutableAttributeString)
@@ -114,9 +120,9 @@ class MArticleContentLabel: UILabel {
 
 // MARK: - drawRect Helper
 extension MArticleContentLabel {
-    func getTouchedRunIn(touchedLine: CTLine, touchedWordIndex: CFIndex, touchedWordRange: NSRange) ->CTRun{
+    func getTouchedRunIn(touchedLine: CTLine, touchedWordIndex: CFIndex, touchedWordRange: NSRange) ->CTRun?{
         let runs = CTLineGetGlyphRuns(touchedLine) as NSArray
-        var currentRun: CTRun!
+        var currentRun: CTRun?
         for i in 0..<runs.count {
             let run = runs[i] as! CTRun
             let runRange = CTRunGetStringRange(run)
@@ -125,7 +131,7 @@ extension MArticleContentLabel {
                 break
             }
         }
-        return currentRun
+        return currentRun ?? nil
     }
     
     func getLineTouchedAt(point: CGPoint, frame: CTFrame) -> CTLine{
@@ -185,17 +191,22 @@ extension MArticleContentLabel {
             }
         }
         
-        let startIn = wordsString.index(wordsString.startIndex, offsetBy: startIndex+1)
-        let endIn = wordsString.index(wordsString.startIndex, offsetBy: endIndex-1)
-        if startIn < endIn {
-            let substring = wordsString[startIn...endIn]
-            // 弹出单词详情窗口通知
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WordViewShouldShowNotification"), object: self, userInfo: ["Word": substring])
-            
+        if startIndex+1 < endIndex-1 {
             return [startIndex+1, endIndex-1]
         }
         
         return nil
+    }
+}
+
+// MARK: - MWordFilterModalDelegate
+extension MArticleContentLabel {
+    func filterLevelSliderValueChanged(value: Int) {
+        attributeWordLevel = NWCE4WordsLevel(rawValue: Int64(value))!
+    }
+    
+    func filterTurnSwitchValueChanged(isOn: Bool) {
+        turnOnWordFilter = isOn
     }
 }
 
