@@ -17,5 +17,5 @@ SQLite存储文章数据 ，单词数据
 - CoreText绘制文章内容，支持点击单词后获取单词／高亮单词
 - 按级别在文章中过滤单词
 
-<img src="https://github.com/ameerkat81/MEnglishReader/blob/master/Resources/课文详情_关闭过滤.png" width="40%" height="40%">
-<img src="https://github.com/ameerkat81/MEnglishReader/blob/master/Resources/课文详情_开启过滤.png" width="40%" height="40%">
+<img src="https://github.com/ameerkat81/MEnglishReader/blob/master/Resources/过滤Model.png" width="40%" height="40%">
+<img src="https://github.com/ameerkat81/MEnglishReader/blob/master/Resources/圆角高亮.png" width="40%" height="40%">
