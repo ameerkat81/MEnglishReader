@@ -20,7 +20,7 @@ class MArticleTitleCell: UITableViewCell {
     /// 文章标题
     lazy var englishTitleLabel: UILabel = {
         let titleLabel = UILabel()
-        titleLabel.font = UIFont.systemFont(ofSize: ENGLISH_TITLE_FONT_SIZE)
+        titleLabel.font = ENGLISH_TITLE_FONT
         titleLabel.numberOfLines = 2
         titleLabel.textColor = UIColor.black
         return titleLabel
@@ -28,7 +28,7 @@ class MArticleTitleCell: UITableViewCell {
     
     lazy var chineseTitleLabel: UILabel = {
         let titleLabel = UILabel()
-        titleLabel.font = UIFont.systemFont(ofSize: CHINESE_TITLE_FONT_SIZE)
+        titleLabel.font = CHINESE_TITLE_FONT
         titleLabel.textColor = UIColor.lightGray
         return titleLabel
     }()

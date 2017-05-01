@@ -19,6 +19,12 @@ class MArticleReadTVC: UITableViewController, UITextViewDelegate, UIGestureRecog
         // Do any additional setup after loading the view.
         
         setupUI()
+        
+        contentCell.contentLabel.delegate = self
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        wordInfoModal.dismiss()
     }
 
     override func didReceiveMemoryWarning() {
@@ -26,9 +32,12 @@ class MArticleReadTVC: UITableViewController, UITextViewDelegate, UIGestureRecog
         // Dispose of any resources that can be recreated.
     }
     
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
+    lazy var  wordInfoModal: MWordInfoModal = {
+        let modal = MWordInfoModal(frame: CGRect(x: 30, y: SCREEN_HEIGHT + 16, width: SCREEN_WDITH - 60
+            , height: SCREEN_HEIGHT / 2.0))
+        UIApplication.shared.keyWindow?.addSubview(modal)
+        return modal
+    }()
     
     lazy var titleCell: MArticleTitleCell = {
         let cell = MArticleTitleCell()
@@ -66,33 +75,49 @@ class MArticleReadTVC: UITableViewController, UITextViewDelegate, UIGestureRecog
     private func setupUI() {
         self.navigationItem.title = ""
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "单词过滤", style: .plain, target: self, action: #selector(self.changeMWordFilterModal))
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(self.showWordDetail(notification:)), name: NSNotification.Name(rawValue: "WordViewShouldShowNotification"), object: nil)
     }
 }
 
 
-// MARK: - HudView提醒
-extension MArticleReadTVC {
-    func showWordDetail(notification: Notification) {
-        let userInfo = notification.userInfo as! [String : AnyObject]
-        let word = userInfo["Word"] as! String
-        
+// MARK: - MArticleContentLabelDelegate
+extension MArticleReadTVC: MArticleContentLabelDelegate{
+    func mArticleContentLabelWillHightLight(word: String) {
         MDBHelper.sharedDBHelper.selectWordby(word: word) { words in
             if words.count > 0 {
-                HUD.flash(HUDContentType.label("\(word)属于Level \(words[0].level!.rawValue)"), delay: 2.0)
+                wordInfoModal.wordText = word
+                wordInfoModal.wordLevel = words[0].level!
             }else {
-                HUD.flash(HUDContentType.label(REMIND_OF_NO_SUCH_WORD_IN_DB), delay: 0.8)
+                wordInfoModal.wordText = word
+                wordInfoModal.wordLevel = .unknown
             }
+            if !wordInfoModal.isShowed { wordInfoModal.show() }
         }
     }
+    
+    func mArticleContentLabelTouchedAtBlank() {
+        wordInfoModal.dismiss()
+    }
 }
+
+
 
 // MARK: - wordFilterView
 extension MArticleReadTVC {
     func changeMWordFilterModal() {
         self.wordFilterModalView.isHidden = !self.wordFilterModalView.isHidden
     }
+}
+
+// MARK: - scrollViewDelegate
+extension MArticleReadTVC {
+//    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+//        let yOffset = scrollView.contentOffset.y
+//        if wordInfoModal.isShowed{
+//            wordInfoModal.frame = CGRect(x: wordInfoModal.frame.minX, y: SCREEN_HEIGHT/2 + yOffset + NAVI_HEIGHT, width: wordInfoModal.frame.width, height: wordInfoModal.frame.height)
+//        }else{
+//            wordInfoModal.frame = CGRect(x: wordInfoModal.frame.minX, y: SCREEN_HEIGHT + yOffset + NAVI_HEIGHT, width: wordInfoModal.frame.width, height: wordInfoModal.frame.height)
+//        }
+//    }
 }
 
 // MARK: - UITableViewDataSource, delegate

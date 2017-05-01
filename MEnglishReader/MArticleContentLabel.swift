@@ -8,6 +8,11 @@
 
 import UIKit
 
+protocol MArticleContentLabelDelegate {
+    func mArticleContentLabelWillHightLight(word: String)
+    func mArticleContentLabelTouchedAtBlank()
+}
+
 class MArticleContentLabel: UILabel, MWordFilterModalDelegate{
     
     var turnOnWordFilter = false {
@@ -31,6 +36,8 @@ class MArticleContentLabel: UILabel, MWordFilterModalDelegate{
     var mCTFrame: CTFrame?
     
     var allowSelectWord = true
+    
+    var delegate: MArticleContentLabelDelegate?
     
     override func draw(_ rect: CGRect) {
         if let context = UIGraphicsGetCurrentContext() {
@@ -71,11 +78,19 @@ class MArticleContentLabel: UILabel, MWordFilterModalDelegate{
                 let touchedLine = getLineTouchedAt(point: reversedPoint, frame: mCTFrame!)
                 let touchedWordIndex = CTLineGetStringIndexForPosition(touchedLine, reversedPoint)
                 
-                guard let rangeIndex = getRangeOfWordAt(index: touchedWordIndex,wordsString: self.text!) else{ highlightWordsLoaction.removeLast(); break scope }
+                guard let rangeIndex = getRangeOfWordAt(index: touchedWordIndex,wordsString: self.text!) else{
+                    highlightWordsLoaction.removeLast()
+                    delegate?.mArticleContentLabelTouchedAtBlank()
+                    break scope
+                }
                 
                 let range = NSMakeRange(rangeIndex[0], rangeIndex[1] - rangeIndex[0] + 1)
                 
-                guard let currentRun = getTouchedRunIn(touchedLine: touchedLine, touchedWordIndex: touchedWordIndex, touchedWordRange: range), range.length > 0 else{ highlightWordsLoaction.removeLast(); break scope }
+                guard let currentRun = getTouchedRunIn(touchedLine: touchedLine, touchedWordIndex: touchedWordIndex, touchedWordRange: range), range.length > 0 else{
+                    highlightWordsLoaction.removeLast()
+                    delegate?.mArticleContentLabelTouchedAtBlank()
+                    break scope
+                }
                 
                 // 高亮文字变色
                 mutableAttributeString.addAttributes([NSForegroundColorAttributeName: HIGHT_LIGHT_TEXT_COLOR], range:range)
@@ -104,7 +119,7 @@ class MArticleContentLabel: UILabel, MWordFilterModalDelegate{
                 let startIn = self.text!.index(self.text!.startIndex, offsetBy: rangeIndex[0])
                 let endIn = self.text!.index(self.text!.startIndex, offsetBy: rangeIndex[1])
                 let substring = self.text![startIn...endIn]
-                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WordViewShouldShowNotification"), object: self, userInfo: ["Word": substring])
+                delegate?.mArticleContentLabelWillHightLight(word: substring)
             }
             
             let framesetter = CTFramesetterCreateWithAttributedString(mutableAttributeString)

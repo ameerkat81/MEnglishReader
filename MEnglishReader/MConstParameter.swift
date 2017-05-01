@@ -29,8 +29,8 @@ let LOADMOREVIEW_HEIGHT: CGFloat = 60
 let TABLEVIEW_HEADER_HEIGHT: CGFloat = 10
 
 // MArticleCell UI
-let TITLE_FONT_SIZE:CGFloat = 17
-let CONTENT_FONT_SIZE:CGFloat = 14
+let TITLE_FONT = UIFont(name: "Baskerville", size: 22)
+let CONTENT_FONT = UIFont(name: "Baskerville", size: 19)
 let M_ARTICLECELL_MARGIN = 8
 let M_ARTICLECELL_SPACING = 4
 
@@ -40,8 +40,8 @@ let ARTICLE_START_ID = 1
 let REMIND_OF_NO_SUCH_WORD_IN_DB = "资料库里没有这个单词哦～"
 
 // MArticleTitleCell
-let CHINESE_TITLE_FONT_SIZE: CGFloat = 13
-let ENGLISH_TITLE_FONT_SIZE: CGFloat = 20
+let ENGLISH_TITLE_FONT = UIFont(name: "Baskerville", size: 25)
+let CHINESE_TITLE_FONT = UIFont(name: "Baskerville", size: 18)
 let MARTICLE_TITLE_CELL_HEIGHT: CGFloat = 60
 
 // MArticleContentCell
@@ -52,7 +52,7 @@ let HIGHT_LIGHT_TEXT_COLOR = UIColor.white
 let HIGHT_LIGHT_SHADOW_COLOR = UIColor.darkGray
 
 // String
-let ARLTICLE_CONTENT_FONT = UIFont.systemFont(ofSize: 18)
+let ARLTICLE_CONTENT_FONT = UIFont(name: "Baskerville", size: 23)
 let ARLTICLE_CONTENT_NORMAL_COLOR = UIColor.black
 let ARLTICLE_CONTENT_HIGHLIGHT_COLOR = UIColor.white
 let ARLTICLE_CONTENT_HIGHLIGHT_SHADOW = UIColor.darkGray
@@ -75,3 +75,15 @@ let WORDFILTER_VIEW_TRAILING: CGFloat = 8
 let WORDFILTER_VIEW_SLIDER_HEIGHT: CGFloat = 50
 let WORDFILTER_VIEW_SWITCH_HEIGHT: CGFloat = 50
 let WORDFILTER_VIEW_BORDER_WIDTH: CGFloat = 3
+
+// MWordInfoModal
+let INFOMODAL_VIEW_MARGIN: CGFloat = 30
+let TITLE_LABEL_HEIGHT:CGFloat = 40
+let TITLE_LABEL_WDITH:CGFloat = 250
+let INFOMODAL_MARGIN:CGFloat = 30
+let LEVEL_LABEL_WDITH:CGFloat = 100
+let LEVEL_LABEL_HEIGHT:CGFloat = 100
+let LEVEL_LABEL_MARGIN:CGFloat = 8
+let CLOSE_BTN_WIDTH: CGFloat = 50
+let INFOMODAL_TITLE_FONT = UIFont(name: "Baskerville-Bold", size: 25)
+let INFOMODAL_LEVEL_FONT = UIFont(name: "Baskerville-Bold", size: 50)

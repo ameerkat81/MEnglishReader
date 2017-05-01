@@ -30,7 +30,7 @@ class MWordFilterModal: UIView {
         let mSwitch = MFilterSwitchView(frame: CGRect(x: WORDFILTER_VIEW_BORDER_WIDTH, y: WORDFILTER_VIEW_TRIGON_HEIGHT + WORDFILTER_VIEW_BORDER_WIDTH, width: WORDFILTER_VIEW_WIDTH - 2*WORDFILTER_VIEW_BORDER_WIDTH, height: WORDFILTER_VIEW_SWITCH_HEIGHT))
         mSwitch.layer.addRoundedCorner(cornerTypes: [.topLeft, .topRight], withRadius: WORDFILTER_VIEW_CORNERRADIUS)
         mSwitch.isHidden = false
-        mSwitch.levelLabel.text = "单词过滤等级:!"
+        mSwitch.levelLabel.text = "单词过滤等级:0"
         self.addSubview(mSwitch)
         return mSwitch
     } ()
@@ -95,9 +95,9 @@ extension MWordFilterModal {
 // MARK: - 事件
 extension MWordFilterModal {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        if !self.isUserInteractionEnabled || self.isHidden { return nil }
+        if !self.isUserInteractionEnabled || self.isHidden || self.alpha <= 0.01 { return nil }
         
-        for view in self.subviews {
+        for view in self.subviews.reversed() {
             let convertedPoint = view.convert(point, from: self)
             if let hitTestView = view.hitTest(convertedPoint, with: event) {
                 return hitTestView

@@ -10,7 +10,7 @@ import UIKit
 import SQLite.Swift
 
 enum NWCE4WordsLevel:Int64 {
-    case zero = 0, one, two, three, four, five, six
+    case zero = 0, one, two, three, four, five, six, unknown
 }
 
 class MNCE4Words {
