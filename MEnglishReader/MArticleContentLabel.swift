@@ -75,7 +75,12 @@ class MArticleContentLabel: UILabel, MWordFilterModalDelegate{
             scope: if highlightWordsLoaction.count > 0 && mCTFrame != nil{
                 let touchedPoint = highlightWordsLoaction.first!
                 let reversedPoint = CGPoint(x: touchedPoint.x, y: self.bounds.maxY - touchedPoint.y)
-                let touchedLine = getLineTouchedAt(point: reversedPoint, frame: mCTFrame!)
+                guard let touchedLine = getLineTouchedAt(point: reversedPoint, frame: mCTFrame!)else {
+                    highlightWordsLoaction.removeLast()
+                    delegate?.mArticleContentLabelTouchedAtBlank()
+                    break scope
+                }
+                
                 let touchedWordIndex = CTLineGetStringIndexForPosition(touchedLine, reversedPoint)
                 
                 guard let rangeIndex = getRangeOfWordAt(index: touchedWordIndex,wordsString: self.text!) else{
@@ -149,13 +154,13 @@ extension MArticleContentLabel {
         return currentRun ?? nil
     }
     
-    func getLineTouchedAt(point: CGPoint, frame: CTFrame) -> CTLine{
+    func getLineTouchedAt(point: CGPoint, frame: CTFrame) -> CTLine?{
         let lines = CTFrameGetLines(mCTFrame!) as NSArray
         
         var originsArray = [CGPoint] (repeating: .zero, count: lines.count)
         CTFrameGetLineOrigins(mCTFrame!, CFRangeMake(0, lines.count), &originsArray)
         
-        var line: CTLine!
+        var line: CTLine?
         for i in 0..<lines.count {
             if(point.y > originsArray[i].y) {
                 line = lines.object(at: i) as! CTLine

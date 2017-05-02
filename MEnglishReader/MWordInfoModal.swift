@@ -66,6 +66,9 @@ class MWordInfoModal: UIView {
         self.layer.shadowRadius = 10
         
         closeBtn.addTarget(self, action: #selector(MWordInfoModal.dismiss), for: UIControlEvents.touchUpInside)
+        
+        let downGesture = UIPanGestureRecognizer(target: self, action: #selector(MWordInfoModal.swipedDown))
+        self.addGestureRecognizer(downGesture)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -90,6 +93,36 @@ class MWordInfoModal: UIView {
                 self.isShowed = false
                 self.delegate?.MWordInfoModalWillHide()
             })
+        }
+    }
+    
+    func swipedDown(_ sender: UIPanGestureRecognizer) -> Void {
+
+        let translation = sender.translation(in: self)
+
+        if sender.state == UIGestureRecognizerState.began {
+            self.initialPoint = self.center
+        }
+
+        if let senderView = sender.view {
+            if translation.y > 0 {
+                senderView.center = CGPoint(x: senderView.center.x, y: senderView.center.y + translation.y)
+            }else {
+                if senderView.center.y + translation.y > (self.initialPoint?.y)! {
+                    senderView.center = CGPoint(x: senderView.center.x, y: senderView.center.y + translation.y)
+                }
+            }
+        }
+        sender.setTranslation(CGPoint.zero, in: self)
+
+        if sender.state == UIGestureRecognizerState.ended {
+            if (sender.view?.center.y)! - (self.initialPoint?.y)! > CGFloat(100) {
+                self.dismiss()
+            }else {
+                UIView.animate(withDuration: 0.4, delay: 0.0, options: UIViewAnimationOptions.curveEaseOut, animations: {
+                    sender.view?.center = self.initialPoint!
+                }, completion: nil)
+            }
         }
     }
 }
